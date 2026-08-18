@@ -1,5 +1,6 @@
 ﻿using MQTTnet;
 using System.Text;
+using System.Text.Json;
 
 namespace MQTTSubscriber
 {
@@ -82,19 +83,27 @@ namespace MQTTSubscriber
             // Scenario B: The message belongs to your data topic
             else if (incomingTopic.Equals("sensor/1/data", StringComparison.OrdinalIgnoreCase))
             {
-                label1.Invoke(new MethodInvoker(() => label1.Text = data));
+                var jsonData = JsonSerializer.Deserialize<PyloadData>(data);
+
+                label1.Invoke(new MethodInvoker(() => label1.Text = jsonData?.Value.ToString()));
             }
             else if (incomingTopic.Equals("sensor/2/data", StringComparison.OrdinalIgnoreCase))
             {
-                label2.Invoke(new MethodInvoker(() => label2.Text = data));
+                var jsonData = JsonSerializer.Deserialize<PyloadData>(data);
+
+                label2.Invoke(new MethodInvoker(() => label2.Text = jsonData?.Value.ToString()));
             }
             else if (incomingTopic.Equals("sensor/3/data", StringComparison.OrdinalIgnoreCase))
             {
-                label3.Invoke(new MethodInvoker(() => label3.Text = data));
+                var jsonData = JsonSerializer.Deserialize<PyloadData>(data);
+
+                label3.Invoke(new MethodInvoker(() => label3.Text = jsonData?.Value.ToString()));
             }
             else if (incomingTopic.Equals("sensor/4/data", StringComparison.OrdinalIgnoreCase))
             {
-                label4.Invoke(new MethodInvoker(() => label4.Text = data));
+                var jsonData = JsonSerializer.Deserialize<PyloadData>(data);
+
+                label4.Invoke(new MethodInvoker(() => label4.Text = jsonData?.Value.ToString()));
             }
 
             return Task.CompletedTask;
@@ -118,5 +127,12 @@ namespace MQTTSubscriber
             }
         }
 
+    }
+
+    public class PyloadData
+    {
+        public string? Name { get; set; }
+        public int Value { get; set; }
+        public string? TimeStamp { get; set; }
     }
 }
