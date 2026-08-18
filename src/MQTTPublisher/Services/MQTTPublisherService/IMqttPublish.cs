@@ -1,4 +1,5 @@
 ﻿using MQTTnet;
+using MQTTPublisher.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,8 @@ namespace MQTTPublisher.Services.MQTTPublisherService
 {
     public interface IMqttPublish
     {
-        Task ConfigureMqttClient();
-        Task PublishConnectMessage();
-        Task PublishDisconnectMessage();
+        Task<MqttClientConnectResult> ConfigureMqttClientAsync(CancellationToken cancellationToken = default);
+        Task<MqttClientPublishResult> PublishStatusMessageAsync(bool isConnect,CancellationToken cancellationToken = default);
+        Task<MqttClientPublishResult> PublishMessageAsync(EdgePointsDetails edgePointsDetails, CancellationToken cancellationToken = default);
     }
 }

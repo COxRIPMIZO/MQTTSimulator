@@ -14,7 +14,7 @@ namespace MQTTPublisher
         private readonly GetRandomData _getRandomData;
         private readonly IOptions<EdgePoints> _edgePointsOptions;
 
-        private const string CLIENT_ID = "MQTTPublisherClient";
+        public const string CLIENT_ID = "MQTTPublisherClient";
 
         public Worker(ILogger<Worker> logger, GetRandomData getRandomData, IMqttClient mqttClient,IOptions<EdgePoints> edgePointsOptions)
         {
@@ -52,7 +52,7 @@ namespace MQTTPublisher
 
                 var msgPayload = new MqttApplicationMessageBuilder()
                     .WithTopic(topic)
-                    .WithQualityOfServiceLevel(GetMqttQualityOfService(_edgePointsOptions.Value.QualityOfService))
+                    .WithQualityOfServiceLevel(_edgePointsOptions.Value.QualityOfService.GetMqttQualityOfService())
                     .WithPayload(payload)
                     .WithRetainFlag(_edgePointsOptions.Value.WillRetain)
                     .Build();
@@ -134,7 +134,7 @@ namespace MQTTPublisher
                 .WithKeepAlivePeriod(TimeSpan.FromSeconds(30))
                 .WithWillTopic(_edgePointsOptions.Value.StatusTopic)
                 .WithWillPayload(_edgePointsOptions.Value.StatusOfflineMessage)
-                .WithWillQualityOfServiceLevel(GetMqttQualityOfService(_edgePointsOptions.Value.QualityOfService))
+                .WithWillQualityOfServiceLevel(_edgePointsOptions.Value.QualityOfService.GetMqttQualityOfService())
                 .WithWillRetain(_edgePointsOptions.Value.WillRetain)
                 .Build();
 
