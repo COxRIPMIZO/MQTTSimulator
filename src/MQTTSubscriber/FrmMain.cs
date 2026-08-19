@@ -36,10 +36,8 @@ namespace MQTTSubscriber
                 //subscribe to topic
                 _mqttclient.ApplicationMessageReceivedAsync += ApplicationMessageReceivedAsync;
 
-                //string[] topic = { "sensor/1/data", "sensor/2/data", "sensor/3/data", "sensor/4/data" };
                 string status = "sensor/status";
 
-                //create susbscription options for topics to listen
                 var mqttSubscribeOptions = new MqttClientSubscribeOptionsBuilder()
                     .WithTopicFilter("sensor/1/data")
                     .WithTopicFilter("sensor/2/data")
@@ -48,7 +46,6 @@ namespace MQTTSubscriber
                     .WithTopicFilter(status)
                     .Build();
 
-                //subscribe to the topic
                 var subscriptionResult = await _mqttclient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
             }
             else
@@ -67,10 +64,8 @@ namespace MQTTSubscriber
             string statusTopic = "sensor/status";
             string dataTopic = "sensor";
 
-            // Scenario A: The message belongs to the status topic
             if (incomingTopic.Equals(statusTopic, StringComparison.OrdinalIgnoreCase))
             {
-                // Safe UI dispatch for the Label
                 if (lblStatus.InvokeRequired)
                 {
                     lblStatus.Invoke(new MethodInvoker(() => UpdateStatusLabel(data)));
@@ -80,7 +75,6 @@ namespace MQTTSubscriber
                     UpdateStatusLabel(data);
                 }
             }
-            // Scenario B: The message belongs to your data topic
             else if (incomingTopic.Equals("sensor/1/data", StringComparison.OrdinalIgnoreCase))
             {
                 var jsonData = JsonSerializer.Deserialize<PyloadData>(data);
@@ -109,20 +103,18 @@ namespace MQTTSubscriber
             return Task.CompletedTask;
         }
 
-        // Separate helper method to update the UI label safely
         private void UpdateStatusLabel(string statusMessage)
         {
-            // Clean up string spaces and make it case-insensitive
             string cleanStatus = statusMessage.Trim().ToLower();
 
             if (cleanStatus == "online" || cleanStatus == "connected" || cleanStatus == "true")
             {
-                lblStatus.Text = "● Connected";
+                lblStatus.Text = "Connected";
                 lblStatus.ForeColor = Color.Green;
             }
-            else // offline, disconnected, or false
+            else
             {
-                lblStatus.Text = "● Disconnected";
+                lblStatus.Text = "Disconnected";
                 lblStatus.ForeColor = Color.Red;
             }
         }

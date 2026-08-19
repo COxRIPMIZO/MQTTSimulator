@@ -72,41 +72,13 @@ namespace MQTTPublisher.Services.MQTTPublisherService
 
         public async Task<MqttClientPublishResult> PublishMessageAsync(EdgePointsDetails edgePointsDetails, CancellationToken cancellationToken = default)
         {
-            //ArgumentNullException.ThrowIfNull(_mqttClient);
-
-            //if (!_mqttClient.IsConnected)
-            //    throw new InvalidOperationException("Cannot publish message because the MQTT client is not connected.");
-
             EdgePointsQueue.Enqueue(edgePointsDetails);
-
-            //var data = _randomData.GetRandomInteger(0,100);
-            //var payload = new
-            //{
-            //    Name = edgePointsDetails.Name,
-            //    Value = data,
-            //    TimeStamp = DateTime.UtcNow.ToString("o") // ISO 8601 format
-            //};
-
-            //var jsonPayload = JsonSerializer.Serialize(payload);
-
-            //var msgOptions = new MqttApplicationMessageBuilder()
-            //    .WithTopic(edgePointsDetails.Topic)
-            //    .WithPayload(jsonPayload)
-            //    .WithQualityOfServiceLevel(_edgePoints.QualityOfService.GetMqttQualityOfService())
-            //    .WithRetainFlag(_edgePoints.WillRetain)
-            //    .Build();
-
-            //return await _mqttClient.PublishAsync(msgOptions,cancellationToken);
 
             return await PublishQueuedMessagesAsync(cancellationToken);
         }
 
         private async Task<MqttClientPublishResult> PublishQueuedMessagesAsync(CancellationToken cancellationToken = default)
         {
-            //ArgumentNullException.ThrowIfNull(_mqttClient);
-
-            //if (!_mqttClient.IsConnected)
-            //    throw new InvalidOperationException("Cannot publish message because the MQTT client is not connected.");
             MqttClientPublishResult? lastpublishResult = null;
 
             if(_mqttClient is null || !_mqttClient.IsConnected)
@@ -124,7 +96,7 @@ namespace MQTTPublisher.Services.MQTTPublisherService
                     {
                         Name = edgePointsDetails.Name,
                         Value = data,
-                        TimeStamp = DateTime.UtcNow.ToString("o") // ISO 8601 format
+                        TimeStamp = DateTime.UtcNow.ToString("o") 
                     };
 
                     var jsonPayload = JsonSerializer.Serialize(payload);
