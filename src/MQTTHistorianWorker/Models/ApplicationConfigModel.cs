@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MQTTHistorianWorker.Services.MQTTHistorianService.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +14,6 @@ namespace MQTTHistorianWorker.Models
         public string? StatusTopic { get; set; }
         public List<SensorsTopics> SensorsTopics { get; set; } = new();
         public MqttServerConfigModel? MqttServer { get; set; }
+        public HistorianDataBaseConnectionModel? ConnectionConfiguration { get; set; }
     }
 }

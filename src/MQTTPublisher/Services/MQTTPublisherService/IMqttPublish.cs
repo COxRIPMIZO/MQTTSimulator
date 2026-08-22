@@ -12,6 +12,6 @@ namespace MQTTPublisher.Services.MQTTPublisherService
     {
         Task<MqttClientConnectResult> ConfigureMqttClientAsync(CancellationToken cancellationToken = default);
         Task<MqttClientPublishResult> PublishStatusMessageAsync(bool isConnect,CancellationToken cancellationToken = default);
-        Task<MqttClientPublishResult> PublishMessageAsync(EdgePointsDetails edgePointsDetails, CancellationToken cancellationToken = default);
+        Task<MqttClientPublishResult> PublishMessageAsync(EdgePointsDetailModel edgePointsDetails, CancellationToken cancellationToken = default);
     }
 }

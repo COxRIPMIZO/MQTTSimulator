@@ -10,7 +10,7 @@ builder.Services.AddHostedService<Worker>();
 #region COnfigured Service
 
 // Add configuration for MQTT settings
-builder.Services.Configure<EdgePoints>(builder.Configuration.GetSection("EdgePoints"));
+builder.Services.Configure<EdgePointsModel>(builder.Configuration.GetSection("EdgePoints"));
 
 builder.Services.AddTransient<GetRandomData>();
 

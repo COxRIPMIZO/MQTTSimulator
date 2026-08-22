@@ -12,10 +12,10 @@ namespace MQTTPublisher
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private readonly IOptions<EdgePoints> _edgePointsOptions;
+        private readonly IOptions<EdgePointsModel> _edgePointsOptions;
         private readonly IMqttPublish _mqttPublisher;
         
-        public Worker(ILogger<Worker> logger, IMqttPublish mqttPublisher,IOptions<EdgePoints> edgePointsOptions)
+        public Worker(ILogger<Worker> logger, IMqttPublish mqttPublisher,IOptions<EdgePointsModel> edgePointsOptions)
         {
             _logger = logger;
             _mqttPublisher = mqttPublisher;
@@ -36,11 +36,11 @@ namespace MQTTPublisher
                 //mqtt data sending logic
                 await PublishMessage(_edgePointsOptions.Value.Sensors);
 
-                await Task.Delay(10000, stoppingToken);
+                await Task.Delay(100, stoppingToken);
             }
         }
 
-        private async Task PublishMessage(List<EdgePointsDetails> edgePointsDetails)
+        private async Task PublishMessage(List<EdgePointsDetailModel> edgePointsDetails)
         {
             foreach (var sensor in edgePointsDetails)
             {

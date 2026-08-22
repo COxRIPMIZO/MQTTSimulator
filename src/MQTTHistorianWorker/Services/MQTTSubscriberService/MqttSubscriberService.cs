@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Options;
 using MQTTHistorianWorker.Models;
+using MQTTHistorianWorker.Services.MQTTHistorianService.Interfaces;
+using MQTTHistorianWorker.Services.MQTTHistorianService.Models;
 using MQTTnet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -22,9 +25,11 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
         private readonly string _regexPattern = "^sensor/(?<id>[^/]+)/data$";
         private readonly Regex _regex;
 
+        private readonly IMqttHistorianService _mqttHistorianService;
 
-        public MqttSubscriberService(ILogger<MqttSubscriberService> logger, IMqttClient mqttClient, IOptions<ApplicationConfigModel> options)
+        public MqttSubscriberService(ILogger<MqttSubscriberService> logger, IMqttClient mqttClient, IOptions<ApplicationConfigModel> options,IMqttHistorianService mqttHistorian)
         {
+            _mqttHistorianService = mqttHistorian;
             _logger = logger;
             _mqttClient = mqttClient;
             _options = options;
@@ -38,10 +43,6 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
         public async Task<MqttClientConnectResult> ConfigureMqttClientAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(_mqttClient);
-
-            //var mqttFactory = new MqttClientFactory();
-
-            //_mqttClient = mqttFactory.CreateMqttClient();
 
             var mqttOptions = new MqttClientOptionsBuilder().
                 WithTcpServer(_mqttServerConfigModel?.BaseAddress, _mqttServerConfigModel?.Port)
@@ -86,7 +87,7 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
             _mqttClient.ApplicationMessageReceivedAsync += ApplicationMessageReceivedAsync;
         }
 
-        private Task ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs args)
+        private async Task ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs args)
         {
             string topics = args.ApplicationMessage.Topic;
             string payload = Encoding.UTF8.GetString(args.ApplicationMessage.Payload);
@@ -97,7 +98,12 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
             {
                 string sensorId = matchedTopic.Groups[0].Value;
 
-                _logger.LogInformation($"sensorId : {sensorId} values : {payload}");
+                var responseData = JsonSerializer.Deserialize<MqttResponseModel>(payload);
+
+                //send to db queue
+                await _mqttHistorianService.AddToQueue(responseData);
+
+                _logger.LogInformation($"sensorId : {responseData.Name} values : {responseData.Value} TimeStamp : {responseData.TimeStamp}");
             }
             else if (topics.Equals(_options.Value.StatusTopic))
             {
@@ -105,7 +111,7 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
                 _logger.LogInformation($"sensorId : {sensorId} values : {payload}");
             }
 
-            return Task.CompletedTask;
+            //return Task.CompletedTask;
         }
     }
 }

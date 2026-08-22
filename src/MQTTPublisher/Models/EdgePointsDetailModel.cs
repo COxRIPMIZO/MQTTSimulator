@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MQTTPublisher.Models
 {
-    public class EdgePointsDetails
+    public class EdgePointsDetailModel
     {
         public string Name { get; set; } = string.Empty;
         public string Topic { get; set; } = string.Empty;

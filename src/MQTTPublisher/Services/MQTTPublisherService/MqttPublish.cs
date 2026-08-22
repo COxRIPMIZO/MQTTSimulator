@@ -16,14 +16,14 @@ namespace MQTTPublisher.Services.MQTTPublisherService
     {
         private readonly ILogger _logger;
         private readonly GetRandomData _randomData;
-        private readonly EdgePoints _edgePoints;
+        private readonly EdgePointsModel _edgePoints;
         private IMqttClient _mqttClient;
 
         public const string CLIENT_ID = "MQTTPublisherClient";
 
-        private ConcurrentQueue<EdgePointsDetails> EdgePointsQueue = new ConcurrentQueue<EdgePointsDetails>();
+        private ConcurrentQueue<EdgePointsDetailModel> EdgePointsQueue = new ConcurrentQueue<EdgePointsDetailModel>();
 
-        public MqttPublish(ILogger<MqttPublish> logger,GetRandomData getRandomData,IOptions<EdgePoints> options,IMqttClient mqttClient)
+        public MqttPublish(ILogger<MqttPublish> logger,GetRandomData getRandomData,IOptions<EdgePointsModel> options,IMqttClient mqttClient)
         {
             _logger = logger;
             _randomData = getRandomData;
@@ -70,7 +70,7 @@ namespace MQTTPublisher.Services.MQTTPublisherService
             return result;
         }
 
-        public async Task<MqttClientPublishResult> PublishMessageAsync(EdgePointsDetails edgePointsDetails, CancellationToken cancellationToken = default)
+        public async Task<MqttClientPublishResult> PublishMessageAsync(EdgePointsDetailModel edgePointsDetails, CancellationToken cancellationToken = default)
         {
             EdgePointsQueue.Enqueue(edgePointsDetails);
 

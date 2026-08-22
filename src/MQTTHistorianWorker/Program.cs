@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Options;
 using MQTTHistorianWorker;
 using MQTTHistorianWorker.Models;
+using MQTTHistorianWorker.Services.MQTTHistorianService.Interfaces;
+using MQTTHistorianWorker.Services.MQTTHistorianService.Repository;
 using MQTTHistorianWorker.Services.MQTTSubscriberService;
 using MQTTnet;
 
@@ -12,6 +14,7 @@ builder.Services.AddHostedService<Worker>();
 builder.Services.Configure<ApplicationConfigModel>(builder.Configuration.GetSection(ApplicationConfigModel.MqttServerConfigSection));
 
 builder.Services.AddSingleton<IMqttSubscriberService, MqttSubscriberService>();
+builder.Services.AddTransient<IMqttHistorianService, MqttHistorianService>();
 
 
 builder.Services.AddSingleton<IMqttClient>(provider => 
