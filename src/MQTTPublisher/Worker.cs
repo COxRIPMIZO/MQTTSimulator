@@ -36,7 +36,7 @@ namespace MQTTPublisher
                 //mqtt data sending logic
                 await PublishMessage(_edgePointsOptions.Value.Sensors);
 
-                await Task.Delay(500, stoppingToken);
+                await Task.Delay(10000, stoppingToken);
             }
         }
 
@@ -48,7 +48,7 @@ namespace MQTTPublisher
 
                 if (result.ReasonCode == MqttClientPublishReasonCode.Success)
                 {
-                    _logger.LogInformation("Published message to topic: {topic} with payload: {payload}", sensor.Topic, sensor.Name);
+                    //_logger.LogInformation("Published message to topic: {topic} with payload: {payload} {Value}", sensor.Topic, sensor.Name,result.PacketIdentifier.Value);
                 }
                 else
                 {

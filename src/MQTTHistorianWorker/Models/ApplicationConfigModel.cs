@@ -9,6 +9,9 @@ namespace MQTTHistorianWorker.Models
     public class ApplicationConfigModel
     {
         public static string MqttServerConfigSection { get; set; } = "ApplicationConfig";
+        public string? UniqueClientID { get; set; } = "MQTT Historian Service";
+        public string? StatusTopic { get; set; }
+        public List<SensorsTopics> SensorsTopics { get; set; } = new();
         public MqttServerConfigModel? MqttServer { get; set; }
     }
 }

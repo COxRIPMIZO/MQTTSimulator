@@ -109,6 +109,8 @@ namespace MQTTPublisher.Services.MQTTPublisherService
                         .Build();
 
                     lastpublishResult = await _mqttClient.PublishAsync(msgOptions, cancellationToken);
+
+                    _logger.LogInformation("Published message to topic: {topic} with {Value}", edgePointsDetails.Topic, data);
                 }
                 catch (Exception)
                 {
