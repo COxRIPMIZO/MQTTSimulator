@@ -11,13 +11,15 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 {
     public class MqttHistorianService : IMqttHistorianService
     {
-        private ConcurrentQueue<MqttResponseModel> InsertDataQueue = new();
+        private readonly Channel<MqttResponseModel> _channel;
+        //private ConcurrentQueue<MqttResponseModel> InsertDataQueue = new();
         private readonly HistorianDataBaseConnectionModel? _connection;
         private readonly ILogger _logger;
         //private DataTable PayloadDataTable = new();
@@ -32,6 +34,19 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
             ////create datatable
             //CreateDataTable();
+        }
+
+        private void CreateAndConfigChannel()
+        {
+            var chnlOption = new BoundedChannelOptions(_connection.BulkInsertCount)
+            {
+                Capacity = _connection.BulkInsertCount,
+                FullMode = BoundedChannelFullMode.
+                SingleReader = true,
+                SingleWriter = false
+            };
+
+            _channel = Channel.CreateBounded<MqttResponseModel>(chnlOption);
         }
 
         private DataTable CreateDataTable()
