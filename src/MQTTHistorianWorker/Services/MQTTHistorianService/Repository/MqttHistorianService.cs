@@ -22,6 +22,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
         private readonly ILogger _logger;
         //private DataTable PayloadDataTable = new();
 
+        //prevent multiple thread to access db insert function at the same time
         private readonly SemaphoreSlim _dbLock = new(1, 1);
 
         public MqttHistorianService(ILogger<MqttHistorianService> logger, IOptions<ApplicationConfigModel> options)
@@ -95,7 +96,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
         private async Task QueueProcessing(CancellationToken cancellationToken = default)
         {
-            //block multiple thred to insert same time
+            //block multiple thred to insert data at the same time
             if(!await _dbLock.WaitAsync(0))
                 return;
 
@@ -121,14 +122,11 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
             catch (Exception ex)
             {
                 _logger.LogError($"Fatal Error during DB Bulk Insert: {ex.Message}");
-                // In a perfect system, you might put the data BACK in the queue here if the DB is down.
             }
             finally
             {
                 _dbLock.Release();
             }
-
-            //return Task.CompletedTask;
         }
     }
 }
