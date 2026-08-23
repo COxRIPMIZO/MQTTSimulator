@@ -119,10 +119,7 @@
             else if (topic.StartsWith("sensor/", StringComparison.OrdinalIgnoreCase))
             {
                 var jsonData = JsonSerializer.Deserialize<MqttResponseModel>(payload);
-                if (jsonData != null)
-                {
-                    _liveData[topic] = jsonData;
-                }
+                if (jsonData != null) _liveData[topic] = jsonData;
             }
 
             InvokeAsync(StateHasChanged);
@@ -137,19 +134,9 @@
 
     private void UpdateStatus(string statusMessage)
     {
-        // if (topics.Equals("sensor/status", StringComparison.OrdinalIgnoreCase))
-        // {
-            string cleanStatus = statusMessage.Trim().ToLower();
-
-            if (cleanStatus == "online" || cleanStatus == "connected" || cleanStatus == "true")
-            {
-                _isConnected = true;
-            }
-            else
-            {
-                _isConnected = false;
-            }
-        // }
+        string cleanStatus = statusMessage.Trim().ToLower();
+        
+        _isConnected = cleanStatus == "online" || cleanStatus == "connected" || cleanStatus == "true";
     }
 
     public async ValueTask DisposeAsync()

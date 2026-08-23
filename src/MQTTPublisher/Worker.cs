@@ -36,7 +36,7 @@ namespace MQTTPublisher
                 //mqtt data sending logic
                 await PublishMessage(_edgePointsOptions.Value.Sensors);
 
-                await Task.Delay(10, stoppingToken);
+                await Task.Delay(1000, stoppingToken);
             }
         }
 
