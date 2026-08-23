@@ -10,6 +10,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Interfaces
     public interface IMqttHistorianService
     {
         //Task InsertDataAsync(CancellationToken cancellationToken = default);
+        ValueTask DiconnectAsync();
         Task AddToQueue(MqttResponseModel data, CancellationToken cancellationToken = default);
     }
 }

@@ -2,6 +2,7 @@
 using MQTTHistorianWorker.Models;
 using MQTTHistorianWorker.Services.MQTTHistorianService.Interfaces;
 using MQTTHistorianWorker.Services.MQTTHistorianService.Models;
+using MQTTHistorianWorker.Services.MQTTHistorianService.Repository;
 using MQTTnet;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,9 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
             ArgumentNullException.ThrowIfNull(_mqttClient);
 
             await _mqttClient.DisconnectAsync(cancellationToken : cancellationToken);
-            
+
+            await _mqttHistorianService.DiconnectAsync();
+
             _logger.LogInformation("Client disconnected successfully.");
         }
 

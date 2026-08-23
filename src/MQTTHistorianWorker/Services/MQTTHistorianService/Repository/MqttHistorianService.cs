@@ -39,7 +39,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
         private void CreateAndConfigChannel()
         {
-            var chnlOption = new BoundedChannelOptions(_connection.BulkInsertCount)
+            var chnlOption = new BoundedChannelOptions(_connection.BufferCount)
             {
                 Capacity = _connection.BulkInsertCount,
                 FullMode = BoundedChannelFullMode.Wait,
@@ -66,7 +66,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
             return dataTable;
         }
 
-        public Task AddToQueue(MqttResponseModel data, CancellationToken cancellationToken = default)
+        public async Task AddToQueue(MqttResponseModel data, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -79,14 +79,12 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
                 //    _ = QueueProcessing(cancellationToken);
                 //}
 
-                _channel.Writer.WriteAsync(data,cancellationToken);
+                await _channel.Writer.WriteAsync(data,cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Fatal Error during Queue Insert: {ex.Message}");
             }
-
-            return Task.CompletedTask;
         }
 
         private void AddRecordsIntoDataTable( DataTable dataTable,MqttResponseModel? responseModel)
@@ -167,8 +165,8 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
         public async ValueTask DiconnectAsync()
         {
+            //notified the channel the to task is compelte 
             _channel.Writer.Complete();
-            _cts.Cancel();
 
             try
             {
@@ -179,6 +177,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
             }
 
+            _cts.Cancel();
             _cts.Dispose();
         }
     }

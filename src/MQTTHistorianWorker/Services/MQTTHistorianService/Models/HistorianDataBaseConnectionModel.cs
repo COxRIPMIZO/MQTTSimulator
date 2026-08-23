@@ -10,6 +10,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Models
     {
         public string? ConnectionString { get; set; }
         public int BulkInsertCount { get; set; }
+        public int BufferCount { get; set; }
         public int RetryCount { get; set; }
         public int WaitingTime { get; set; }
     }
