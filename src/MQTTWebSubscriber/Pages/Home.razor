@@ -1,0 +1,150 @@
+﻿@page "/"
+@using System.Text
+@using MQTTWebSubscriber.Models
+@using System.Text.Json
+@inject IMqttClient clinetFactory
+@implements IAsyncDisposable
+
+<PageTitle>Factory Dashboard</PageTitle>
+
+@* <h1>Live Factory HMI (Blazor WASM)</h1>
+
+<h4 style="color:@(_isConnected ? "green" : "red")">
+    Status : @(_isConnected ? "ONLINE" : "OFFLINE")
+</h4>
+
+<hr />
+
+<div class="row">
+    @foreach (var item in _liveData)
+    {
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    @item.Key
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title text-center">@item.Value.Name</h2>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title text-center">@item.Value.Value</h2>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title text-center">@item.Value.TimeStamp</h2>
+                </div>
+            </div>
+        </div>
+    }
+</div> *@
+
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Live Factory HMI (Blazor WASM)</h2>
+        <span class="badge @(_isConnected ? "bg-success" : "bg-danger") fs-6">
+            @(_isConnected ? "● SYSTEM ONLINE" : "● SYSTEM OFFLINE")
+        </span>
+    </div>
+
+    <hr />
+
+    <div class="row">
+        @foreach (var item in _liveData)
+        {
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-secondary">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between">
+                        <span>@item.Key</span>
+                        <span class="badge @(_isConnected ? "bg-primary" : "bg-secondary")">@(_isConnected ? "Live" : "Offline")</span>
+                    </div>
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-1">@item.Value?.Name</h6>
+                        <h1 class="display-5 fw-bold text-dark my-2">@item.Value?.Value</h1>
+                        <small class="text-secondary">@item.Value?.TimeStamp</small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private IMqttClient _client;
+    private bool _isConnected = false;
+    private Dictionary<string, MqttResponseModel> _liveData = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(clinetFactory);
+        _client = clinetFactory;
+
+        var options = new MqttClientOptionsBuilder()
+            .WithClientId("BlazorClient_" + Guid.NewGuid().ToString())
+            .WithWebSocketServer(o => o.WithUri("ws://localhost:9001"))
+            .WithCredentials("edge_admin", "condot123") // Add if broker auth is on
+            .Build();
+
+        // Attach event handler
+        _client.ApplicationMessageReceivedAsync += HandleIncomingMessage;
+
+        try
+        {
+            await _client.ConnectAsync(options);
+            _isConnected = true;
+
+            var subOptions = new MqttClientSubscribeOptionsBuilder()
+                .WithTopicFilter("sensor/+/data")
+                .WithTopicFilter("sensor/status")
+                .Build();
+
+            await _client.SubscribeAsync(subOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"WebSocket Connection Failed: {ex.Message}");
+            _isConnected = false;
+        }
+    }
+
+    private Task HandleIncomingMessage(MqttApplicationMessageReceivedEventArgs e)
+    {
+        try
+        {
+            var topic = e.ApplicationMessage.Topic;
+            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+
+            if (topic.Equals("sensor/status", StringComparison.OrdinalIgnoreCase))
+            {
+                UpdateStatus(payload);
+            }
+            else if (topic.StartsWith("sensor/", StringComparison.OrdinalIgnoreCase))
+            {
+                var jsonData = JsonSerializer.Deserialize<MqttResponseModel>(payload);
+                if (jsonData != null) _liveData[topic] = jsonData;
+            }
+
+            InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing payload on {e.ApplicationMessage.Topic}: {ex.Message}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void UpdateStatus(string statusMessage)
+    {
+        string cleanStatus = statusMessage.Trim().ToLower();
+        
+        _isConnected = cleanStatus == "online" || cleanStatus == "connected" || cleanStatus == "true";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_client != null && _client.IsConnected)
+        {
+            _client.ApplicationMessageReceivedAsync -= HandleIncomingMessage;
+            await _client.DisconnectAsync();
+        }
+    }
+}
