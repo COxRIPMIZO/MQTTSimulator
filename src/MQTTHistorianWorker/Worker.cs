@@ -27,18 +27,12 @@ namespace MQTTHistorianWorker
             await _mqttSubscriberService.ConfigureMqttClientAsync();
 
             await _mqttSubscriberService.SubscribeMessagesAsync();
+        }
 
-            //while (!stoppingToken.IsCancellationRequested)
-            //{
-            //    if (_logger.IsEnabled(LogLevel.Information))
-            //    {
-            //        _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            //    }
-
-               
-
-            //   await Task.Delay(10000, stoppingToken);
-            //}
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            await _mqttSubscriberService.DisconnectAsync(cancellationToken);
+            await base.StopAsync(cancellationToken);
         }
     }
 }

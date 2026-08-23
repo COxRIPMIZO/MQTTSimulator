@@ -40,6 +40,16 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
             //regex pattern
             _regex = new Regex(_regexPattern, _regexOptions);
         }
+
+        public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(_mqttClient);
+
+            await _mqttClient.DisconnectAsync(cancellationToken : cancellationToken);
+            
+            _logger.LogInformation("Client disconnected successfully.");
+        }
+
         public async Task<MqttClientConnectResult> ConfigureMqttClientAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(_mqttClient);
@@ -50,7 +60,19 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
                 .WithClientId(_options.Value.UniqueClientID)
                 .Build();
 
-            return await _mqttClient.ConnectAsync(mqttOptions,cancellationToken);
+            try
+            {
+                var response = await _mqttClient.ConnectAsync(mqttOptions, cancellationToken);
+
+                _logger.LogInformation("Client connected successfully.");
+
+                return response;
+            }
+            catch (Exception)
+            {
+                _logger.LogWarning("Error occured while connecting client.");
+                return new MqttClientConnectResult();
+            }
         }
 
         public async Task<MqttClientSubscribeResult> SubscribeMessagesAsync(CancellationToken cancellationToken = default)
@@ -110,8 +132,6 @@ namespace MQTTHistorianWorker.Services.MQTTSubscriberService
                 string sensorId = topics;
                 _logger.LogInformation($"sensorId : {sensorId} values : {payload}");
             }
-
-            //return Task.CompletedTask;
         }
     }
 }
