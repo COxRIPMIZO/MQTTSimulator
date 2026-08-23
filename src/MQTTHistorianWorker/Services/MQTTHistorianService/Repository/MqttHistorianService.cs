@@ -18,14 +18,14 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 {
     public class MqttHistorianService : IMqttHistorianService
     {
-        private readonly Channel<MqttResponseModel> _channel;
-        //private ConcurrentQueue<MqttResponseModel> InsertDataQueue = new();
+        private Channel<MqttResponseModel> _channel;
         private readonly HistorianDataBaseConnectionModel? _connection;
         private readonly ILogger _logger;
-        //private DataTable PayloadDataTable = new();
+        private Task _consumer;
+        private readonly CancellationTokenSource _cts = new();
 
         //prevent multiple thread to access db insert function at the same time
-        private readonly SemaphoreSlim _dbLock = new(1, 1);
+        //private readonly SemaphoreSlim _dbLock = new(1, 1);
 
         public MqttHistorianService(ILogger<MqttHistorianService> logger, IOptions<ApplicationConfigModel> options)
         {
@@ -34,6 +34,7 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
             ////create datatable
             //CreateDataTable();
+            CreateAndConfigChannel();
         }
 
         private void CreateAndConfigChannel()
@@ -41,12 +42,14 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
             var chnlOption = new BoundedChannelOptions(_connection.BulkInsertCount)
             {
                 Capacity = _connection.BulkInsertCount,
-                FullMode = BoundedChannelFullMode.
+                FullMode = BoundedChannelFullMode.Wait,
                 SingleReader = true,
                 SingleWriter = false
             };
 
             _channel = Channel.CreateBounded<MqttResponseModel>(chnlOption);
+
+            _consumer = Task.Run(() => QueueProcessing());
         }
 
         private DataTable CreateDataTable()
@@ -67,14 +70,16 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
         {
             try
             {
-                InsertDataQueue.Enqueue(data);
+                //InsertDataQueue.Enqueue(data);
 
-                _logger.LogInformation("Data inserted into queue for insert.");
+                //_logger.LogInformation("Data inserted into queue for insert.");
 
-                if (InsertDataQueue.Count >= _connection.BulkInsertCount)
-                {
-                    _ = QueueProcessing(cancellationToken);
-                }
+                //if (InsertDataQueue.Count >= _connection.BulkInsertCount)
+                //{
+                //    _ = QueueProcessing(cancellationToken);
+                //}
+
+                _channel.Writer.WriteAsync(data,cancellationToken);
             }
             catch (Exception ex)
             {
@@ -96,6 +101,20 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
             dataTable.Rows.Add(rowData);
         }
 
+        private async Task ProcessingData(List<MqttResponseModel> responseModels)
+        {
+            using DataTable data = CreateDataTable();
+
+            //add records
+            foreach (var responseModel in responseModels) 
+            {
+                AddRecordsIntoDataTable(data,responseModel);
+            }
+
+            //send data
+            await SentToDataTable(data);
+        }
+
         private async Task<int> SentToDataTable(DataTable data)
         {
             using (IDbConnection conn = new SqlConnection(_connection.ConnectionString))
@@ -111,37 +130,56 @@ namespace MQTTHistorianWorker.Services.MQTTHistorianService.Repository
 
         private async Task QueueProcessing(CancellationToken cancellationToken = default)
         {
-            //block multiple thred to insert data at the same time
-            if(!await _dbLock.WaitAsync(0))
-                return;
+            var data = new List<MqttResponseModel>();
 
             try
             {
-                //create datatable
-                using DataTable dt = CreateDataTable();
-
-                int processedCount = 0;
-
-                while (InsertDataQueue.TryDequeue(out var result) && processedCount < _connection.BulkInsertCount)
+               while(await _channel.Reader.WaitToReadAsync(_cts.Token))
                 {
-                    AddRecordsIntoDataTable(dt,result);
-                    processedCount++;
-                }
+                    while (_channel.Reader.TryRead(out var item))
+                    {
+                        data.Add(item);
 
-                if (dt.Rows.Count > 0)
-                {
-                    await SentToDataTable(dt);
-                    _logger.LogInformation($"Successfully bulk inserted {dt.Rows.Count} rows into SQL Server.");
+                        if(data.Count >= _connection.BulkInsertCount)
+                        {
+                            await ProcessingData(data);
+                            data.Clear();
+                        }
+                    }
+
+                    //send remaing data
+                    if(data.Count > 0)
+                    {
+                        await ProcessingData(data);
+                        data.Clear();
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Fatal Error during DB Bulk Insert: {ex.Message}");
             }
-            finally
+        }
+
+        public async ValueTask DiconnectAsync()
+        {
+            _channel.Writer.Complete();
+            _cts.Cancel();
+
+            try
             {
-                _dbLock.Release();
+                await _consumer;
             }
+            catch (Exception)
+            {
+
+            }
+
+            _cts.Dispose();
         }
     }
 }
