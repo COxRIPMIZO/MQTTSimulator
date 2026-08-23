@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTSubscriber", "src\MQTTS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTHistorianWorker", "src\MQTTHistorianWorker\MQTTHistorianWorker.csproj", "{0E6207FD-BD77-4D24-9A73-D3A3C7F6B47D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTTWebSubscriber", "src\MQTTWebSubscriber\MQTTWebSubscriber.csproj", "{5835F9EF-4C6D-4D4D-8AEC-01DFF449095E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{0E6207FD-BD77-4D24-9A73-D3A3C7F6B47D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E6207FD-BD77-4D24-9A73-D3A3C7F6B47D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E6207FD-BD77-4D24-9A73-D3A3C7F6B47D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5835F9EF-4C6D-4D4D-8AEC-01DFF449095E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5835F9EF-4C6D-4D4D-8AEC-01DFF449095E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5835F9EF-4C6D-4D4D-8AEC-01DFF449095E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5835F9EF-4C6D-4D4D-8AEC-01DFF449095E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
